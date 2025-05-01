@@ -6,19 +6,19 @@ sidebar:
   label: Add a self-hosted private application
 ---
 
-import { Render } from "~/components"
+import { Render } from "~/components";
 
 You can configure a self-hosted Access application to manage access to specific IPs or hostnames on your private network.
 
 :::note
-This feature is available in early access and replaces the legacy [private network app type](/cloudflare-one/applications/non-http/legacy-private-network-app/). To request access, contact your account team.
+This feature replaces the legacy [private network app type](/cloudflare-one/applications/non-http/legacy-private-network-app/).
 :::
 
 ## Prerequisites
 
 - Private IPs and hostnames are reachable over Cloudflare WARP, Magic WAN or Browser Isolation. For more details, refer to [Connect a private network](/cloudflare-one/connections/connect-networks/private-net/).
 - Private hostnames route to your custom DNS resolver through [Local Domain Fallback](/cloudflare-one/connections/connect-devices/warp/configure-warp/route-traffic/local-domains/) or [Gateway resolver policies](/cloudflare-one/policies/gateway/resolver-policies/).
-- [Gateway TLS decryption](/cloudflare-one/policies/gateway/http-policies/tls-decryption/) must be enabled if you would like to present a login page in the browser and issue an authorization JWT to your origin. Otherwise, users will receive a pop-up notification from the WARP client and all session management will be handled in the WARP client.
+- (Optional) Turn on [Gateway TLS decryption](/cloudflare-one/policies/gateway/http-policies/tls-decryption/) if you want to use Access JWTs to manage [HTTPS application sessions](#https-applications).
 
 ## Add your application to Access
 
@@ -58,7 +58,7 @@ This feature is available in early access and replaces the legacy [private netwo
 
 12. Select **Next**.
 
-13. (Optional) Configure advanced settings. These settings only apply to private hostnames and require Gateway TLS decryption.
+13. (Optional) Configure advanced settings. These settings only apply to private hostnames and require [Gateway TLS decryption](/cloudflare-one/policies/gateway/http-policies/tls-decryption/).
 
 		- [**Cross-Origin Resource Sharing (CORS) settings**](/cloudflare-one/identity/authorization-cookie/cors/)
 		- [**Cookie settings**](/cloudflare-one/identity/authorization-cookie/#cookie-settings)
@@ -71,16 +71,29 @@ This feature is available in early access and replaces the legacy [private netwo
 
 Users can now connect to your private application after authenticating with Cloudflare Access.
 
+## Authentication flow
+
+### HTTPS applications
+
+If [Gateway TLS decryption](/cloudflare-one/policies/gateway/http-policies/tls-decryption/) is turned on and a user is accessing an HTTPS application on port `443`, Cloudflare Access will present a login page in the browser and issue an [application token](/cloudflare-one/identity/authorization-cookie/application-token/) to your origin. This is the same cookie-based authentication flow used by [self-hosted public apps](/cloudflare-one/applications/configure-apps/self-hosted-public-app/).
+
+If [Gateway TLS decryption](/cloudflare-one/policies/gateway/http-policies/tls-decryption/) is turned off, session management is [handled in the WARP client](#non-https-applications) instead of in the browser.
+
+### Non-HTTPS applications
+
+The WARP client manages sessions for all non-HTTPS applications. Users will receive an `Authentication required` pop-up notification from the WARP client. When the user selects the notification, WARP will open a browser window with your Access login page.
+
+<Render file="gateway/client-notifications-os" product="cloudflare-one" />
+
 ## Modify order of precedence in Gateway
 
 By default, Cloudflare will evaluate a private application's Access policies after evaluating all Gateway network policies. To evaluate Access private applications before or after specific Gateway policies, create the following [Gateway network policy](/cloudflare-one/policies/gateway/network-policies/):
 
+| Selector                            | Operator | Value | Action |
+| ----------------------------------- | -------- | ----- | ------ |
+| All Access App Private Destinations | is       | on    | Allow  |
 
-| Selector | Operator | Value        | Action |
-| -------- | -------- | ------------ | ------ |
-| All Access Private Apps | is       | `Enabled` | Allow  |
-
-You can now drag and drop this policy in the Gateway policy builder to change its [order of precedence](/cloudflare-one/policies/gateway/order-of-enforcement/#order-of-precedence).
+You can move this policy in the Gateway policy builder to change its [order of precedence](/cloudflare-one/policies/gateway/order-of-enforcement/#order-of-precedence).
 
 :::note
 Users must pass the policies in your Access application before they are granted access. The Gateway Allow policy is strictly for routing and connectivity purposes.

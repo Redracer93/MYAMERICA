@@ -1,9 +1,15 @@
 ---
 pcx_content_type: how-to
 title: Remix
+tags: [Remix]
 ---
 
-import { PagesBuildPreset, Render, PackageManagers, WranglerConfig } from "~/components";
+import {
+	PagesBuildPreset,
+	Render,
+	PackageManagers,
+	WranglerConfig,
+} from "~/components";
 
 [Remix](https://remix.run/) is a framework that is focused on fully utilizing the power of the web. Like Cloudflare Workers, it uses modern JavaScript APIs, and it places emphasis on web fundamentals such as meaningful HTTP status codes, caching and optimizing for both usability and performance.
 
@@ -96,7 +102,7 @@ export const loader = ({ context }: LoaderFunctionArgs) => {
 
 :::note[Correcting the env type]
 
-You may have noticed that `context.cloudflare.env` is not typed correctly when you add additional bindings in the `wrangler.toml / wrangler.json` file.
+You may have noticed that `context.cloudflare.env` is not typed correctly when you add additional bindings in the [Wrangler configuration file](/workers/wrangler/configuration/).
 
 To fix this, run `npm run typegen` to generate the missing types. This will update the `Env` interface defined in `worker-configuration.d.ts`.
 After running the command, you can access the bindings in your `loader` or `action` using `context.cloudflare.env` as shown above.
